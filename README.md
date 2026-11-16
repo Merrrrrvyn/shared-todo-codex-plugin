@@ -1,8 +1,8 @@
 # Shared Todo · Codex CLI 插件
 
-预览版 `0.1.0-alpha.3`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可通过自然语言新建和修改清单、设置邮件通知并管理待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
+预览版 `0.1.0-alpha.4`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可通过自然语言新建、修改和删除自有清单、设置邮件通知并管理待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
 
-**服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 提供 10 个清单/待办工具、独立授权、权限隔离和撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
+**服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 提供 11 个清单/待办工具、独立授权、权限隔离和撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
 
 ## 安装到 Codex CLI
 
@@ -34,23 +34,23 @@ codex mcp login shared-todo
 
 其他版本可先用 `codex mcp list` 核对名称。不要额外注册一份重复服务器。
 
-### 从 alpha.2 升级
+### 从 alpha.2 / alpha.3 升级
 
-新建清单和修改清单/邮件设置需要新增的 `list:write` 权限，旧令牌不会自动获得。先刷新 marketplace、重装插件并清除旧客户端登录缓存，然后重新确认授权：
+新建和修改清单需要 `list:write`；**永久删除清单及其中全部待办需要新增的 `list:delete`**。旧令牌不会自动获得新权限。先刷新 marketplace、重装插件并清除旧客户端登录缓存，然后在浏览器明确确认所需权限：
 
 ```bash
 codex plugin marketplace upgrade shared-todo
 codex mcp logout shared-todo
 codex plugin remove shared-todo@shared-todo
 codex plugin add shared-todo@shared-todo
-codex mcp login shared-todo --scopes todo:read,todo:write,todo:delete,list:write
+codex mcp login shared-todo --scopes todo:read,todo:write,todo:delete,list:write,list:delete
 ```
 
-之后开启新的 Codex 会话，重新发现 10 个工具。已在隔离配置中验证旧版三范围登录 → 退出 → 新版重新注册 → 四范围登录成功。只刷新 access token 不能扩权；旧注册元数据可能拒绝新范围，所以不要跳过退出重连。
+之后开启新的 Codex 会话，重新发现 11 个工具。`--scopes` 仅指定申请范围，浏览器中仍需勾选“永久删除自有清单及其中全部待办”。只刷新 access token 不能扩权，`todo:delete` 和 `list:write` 都不包含删除清单权限；旧注册元数据可能拒绝新范围，所以不要跳过退出重连。
 
-### 登录成功但仍提示缺少 list:write
+### 登录成功但仍提示缺少 list:write / list:delete
 
-`--scopes` 指定的是申请范围，浏览器确认页必须同时勾选“创建清单、修改自有清单和邮件通知”。`codex mcp list` 显示 OAuth 也不能证明运行中的对话连接已读取最新令牌。
+`--scopes` 指定的是申请范围，浏览器确认页必须同时勾选你希望授予的清单管理权限。`codex mcp list` 显示 OAuth 也不能证明运行中的对话连接已读取最新令牌。
 
 如果已确认授权但旧会话仍报错，退出当前 CLI 后，使用独立后台启动新进程再试：
 
@@ -66,7 +66,7 @@ codex --no-daemon
 
 当前配置不包含固定 `client_id`。配套服务支持公共客户端 DCR 与 S256 PKCE；Codex 可自动注册，不需要在插件中放置客户端密钥。资源发现与令牌受众需与实际 MCP URL 一致。
 
-申请范围为 `todo:read`、`todo:write`、`todo:delete`、`list:write`，用户可以在授权页缩小范围。owner/editor 可修改待办，viewer 只读；**已有清单的名称、描述和邮件设置仅创建者可改**。非成员不可访问，服务端逐次校验。只有写权限时，写入结果仅返回 ID，不返回已有描述/备注/通知设置。
+申请范围为 `todo:read`、`todo:write`、`todo:delete`、`list:write`、`list:delete`，用户可以在授权页缩小范围。owner/editor 可修改待办，viewer 只读；**已有清单的名称、描述、邮件设置与删除仅创建者可操作**。非成员不可访问，服务端逐次校验。只有写权限时，写入结果仅返回 ID，不返回已有描述/备注/通知设置。
 
 ## 使用示例
 
@@ -80,8 +80,11 @@ codex --no-daemon
 - 把待办 42 的优先级设为紧急。
 - 将待办 42 标记完成；或将它重新打开。
 - 删除待办 42。
+- 删除清单 ID 42 及其中全部待办。
 
 插件会定位清单和待办 ID，处理重名与分页，只回报工具确认成功的操作。不会将待办备注中的文字当作操作指令。
+
+删除清单调用 `delete_list`，会永久删除该清单及其中全部待办和成员关系，无法撤销。它与删除单条待办是两个工具、两项独立权限；请明确指定目标清单，只有创建者可以执行。
 
 创建清单可在一次请求中同时保存名称、描述和邮件开关。只要求开启而未指定时间时，新清单沿用默认每天 `09:00 / UTC+8`，结果会明确回显；更新已有清单仅开关通知时保留原时间。汇总针对清单成员和未完成待办，配置保存成功不代表邮件已经发出，空清单不会发送待办汇总。
 
@@ -97,7 +100,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/package_plugin.py
 ```
 
-产物为 `dist/shared-todo-codex-0.1.0-alpha.3/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
+产物为 `dist/shared-todo-codex-0.1.0-alpha.4/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
 
 更换服务地址时，仅改发布产物，不修改源码：
 
@@ -116,7 +119,7 @@ python3 scripts/package_plugin.py --mcp-url http://127.0.0.1:8000/mcp --allow-lo
 本地联调需要另行提供兼容的 MCP/OAuth 服务，本仓库不提供服务端。服务地址、受保护资源元数据和令牌受众应一致，并实现 [MCP 接口约定](plugins/shared-todo/skills/shared-todo/references/mcp-contract.md)。准备服务后再安装本机构建：
 
 ```bash
-codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.3
+codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.4
 codex plugin add shared-todo@shared-todo
 codex mcp login shared-todo
 ```
