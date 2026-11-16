@@ -1,0 +1,20 @@
+{
+  "name": "shared-todo",
+  "interface": {
+    "displayName": "Shared Todo"
+  },
+  "plugins": [
+    {
+      "name": "shared-todo",
+      "source": {
+        "source": "local",
+        "path": "./plugins/shared-todo"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

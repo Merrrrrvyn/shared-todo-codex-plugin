@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "shared-todo": {
+      "type": "http",
+      "url": "https://api.todolist.yymervyn.top/mcp",
+      "scopes": ["todo:read", "todo:write", "todo:delete"]
+    }
+  }
+}
