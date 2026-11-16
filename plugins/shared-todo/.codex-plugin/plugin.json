@@ -1,7 +1,7 @@
 {
   "name": "shared-todo",
-  "version": "0.1.0-alpha.4",
-  "description": "通过远程 MCP 新建、修改和删除自有清单，设置邮件通知并管理待办；每位用户独立授权。",
+  "version": "0.1.0-alpha.5",
+  "description": "通过远程 MCP 使用内置模板创建清单，管理自有清单和待办，并设置邮件通知；每位用户独立授权。",
   "author": {
     "name": "Merrrrrvyn"
   },
@@ -12,8 +12,8 @@
   "keywords": ["todo", "tasks", "shared-todo", "待办", "清单"],
   "interface": {
     "displayName": "共享待办",
-    "shortDescription": "管理共享清单、邮件通知和待办",
-    "longDescription": "连接已部署的 Shared Todo 远程 MCP，通过浏览器使用个人账号授权，在清单成员权限范围内管理待办，并可在网页设置中撤销客户端授权。自建地址需另行部署兼容服务。",
+    "shortDescription": "用模板创建清单并管理待办",
+    "longDescription": "连接已部署的 Shared Todo 远程 MCP，通过浏览器使用个人账号授权，查询内置模板并一键创建清单与初始待办，在成员权限范围内管理数据，并可在网页设置中撤销客户端授权。自建地址需另行部署兼容服务。",
     "developerName": "Merrrrrvyn",
     "websiteURL": "https://todolist.yymervyn.top",
     "supportURL": "https://github.com/Merrrrrvyn/shared-todo-codex-plugin/issues",
@@ -21,7 +21,8 @@
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "查看我的清单和未完成待办",
-      "新建英语启蒙清单，描述 week9，并开启邮件通知",
+      "用英语启蒙模板新建清单，描述 week9，并开启邮件通知",
+      "查看可用的清单模板",
       "删除指定 ID 的自有清单及其中全部待办",
       "在采购清单中添加买牛奶",
       "修改待办的截止时间并标记完成"

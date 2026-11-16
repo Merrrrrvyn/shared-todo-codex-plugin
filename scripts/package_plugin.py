@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import sys
 import tarfile
@@ -15,14 +16,30 @@ PLUGIN = Path("plugins/shared-todo")
 MANIFEST = PLUGIN / ".codex-plugin/plugin.json"
 MCP = PLUGIN / ".mcp.json"
 MARKETPLACE = Path(".agents/plugins/marketplace.json")
+SKILL = PLUGIN / "skills/shared-todo/SKILL.md"
+CONTRACT = PLUGIN / "skills/shared-todo/references/mcp-contract.md"
 FILES = (
     MARKETPLACE,
     MANIFEST,
     MCP,
-    PLUGIN / "skills/shared-todo/SKILL.md",
-    PLUGIN / "skills/shared-todo/references/mcp-contract.md",
+    SKILL,
+    CONTRACT,
     Path("README.md"),
 )
+EXPECTED_TOOLS = {
+    "list_templates": "todo:read",
+    "list_lists": "todo:read",
+    "get_list": "todo:read",
+    "create_list": "list:write",
+    "update_list": "list:write",
+    "delete_list": "list:delete",
+    "list_members": "todo:read",
+    "list_todos": "todo:read",
+    "get_todo": "todo:read",
+    "create_todo": "todo:write",
+    "update_todo": "todo:write",
+    "delete_todo": "todo:delete",
+}
 
 
 def validate_url(value: str, *, allow_local_http: bool = False) -> str:
@@ -59,6 +76,26 @@ def load_json(root: Path, relative: Path) -> dict:
     return payload
 
 
+def validate_documented_contract(root: Path) -> None:
+    """Keep the shipped tool table and template guidance aligned with the API."""
+    contract = (root / CONTRACT).read_text(encoding="utf-8")
+    rows = {
+        name: line
+        for line in contract.splitlines()
+        if (match := re.match(r"^\| `([a-z_]+)` \|", line))
+        for name in (match.group(1),)
+    }
+    if set(rows) != set(EXPECTED_TOOLS) or len(rows) != len(EXPECTED_TOOLS):
+        raise ValueError("MCP 接口约定必须准确列出全部 12 个工具")
+    for tool, scope in EXPECTED_TOOLS.items():
+        if scope not in rows[tool]:
+            raise ValueError(f"MCP 工具 {tool} 的权限范围文档不正确")
+    if "`list_templates` | 无 |" not in rows["list_templates"]:
+        raise ValueError("list_templates 必须文档化为无参数工具")
+    if "template?: string|null" not in rows["create_list"]:
+        raise ValueError("create_list 必须文档化可选模板 ID")
+
+
 def validate_package(root: Path, *, allow_local_http: bool = False) -> dict:
     """Check the fixed bundle and return its manifest."""
     root = root.resolve()
@@ -70,6 +107,7 @@ def validate_package(root: Path, *, allow_local_http: bool = False) -> dict:
             or not path.resolve().is_relative_to(root)
         ):
             raise ValueError(f"缺少或不安全的发布文件：{relative}")
+    validate_documented_contract(root)
     manifest = load_json(root, MANIFEST)
     if manifest.get("name") != "shared-todo":
         raise ValueError("插件名称必须为 shared-todo")

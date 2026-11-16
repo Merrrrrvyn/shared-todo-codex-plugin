@@ -106,6 +106,40 @@ class PackageValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "授权范围"):
             package_plugin.validate_package(self.root)
 
+    def test_rejects_contract_missing_template_tool(self):
+        path = self.root / package_plugin.CONTRACT
+        content = path.read_text(encoding="utf-8")
+        content = "\n".join(
+            line
+            for line in content.splitlines()
+            if "`list_templates` |" not in line
+        )
+        path.write_text(content, encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "12 个工具"):
+            package_plugin.validate_package(self.root)
+
+    def test_rejects_contract_with_wrong_template_permission(self):
+        path = self.root / package_plugin.CONTRACT
+        content = path.read_text(encoding="utf-8")
+        content = content.replace(
+            "| `list_templates` | 无 | `GET /list-templates` | `todo:read` |",
+            "| `list_templates` | 无 | `GET /list-templates` | `list:write` |",
+        )
+        path.write_text(content, encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "list_templates.*权限"):
+            package_plugin.validate_package(self.root)
+
+    def test_rejects_contract_missing_create_list_template_parameter(self):
+        path = self.root / package_plugin.CONTRACT
+        content = path.read_text(encoding="utf-8")
+        content = content.replace(
+            "template?: string|null, ",
+            "",
+        )
+        path.write_text(content, encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "可选模板 ID"):
+            package_plugin.validate_package(self.root)
+
     def test_rejects_symlinked_required_file(self):
         outside = self.temp_path / "outside-readme.md"
         outside.write_text("external content", encoding="utf-8")
