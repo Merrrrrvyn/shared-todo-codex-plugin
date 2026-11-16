@@ -92,6 +92,13 @@ class PackageValidationTests(unittest.TestCase):
         manifest = package_plugin.validate_package(self.root)
         self.assertEqual(manifest["name"], "shared-todo")
 
+    def test_rejects_bundle_missing_new_list_management_scope(self):
+        payload = self.read_json(package_plugin.MCP)
+        payload["mcpServers"]["shared-todo"]["scopes"].remove("list:write")
+        self.write_json(package_plugin.MCP, payload)
+        with self.assertRaisesRegex(ValueError, "授权范围"):
+            package_plugin.validate_package(self.root)
+
     def test_rejects_symlinked_required_file(self):
         outside = self.temp_path / "outside-readme.md"
         outside.write_text("external content", encoding="utf-8")

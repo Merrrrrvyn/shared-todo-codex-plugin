@@ -1,7 +1,7 @@
 {
   "name": "shared-todo",
-  "version": "0.1.0-alpha.2",
-  "description": "通过远程 MCP 管理共享待办清单；每位用户独立授权，沿用清单成员权限。",
+  "version": "0.1.0-alpha.3",
+  "description": "通过远程 MCP 新建和修改共享清单、设置邮件通知并管理待办；每位用户独立授权。",
   "author": {
     "name": "Merrrrrvyn"
   },
@@ -12,7 +12,7 @@
   "keywords": ["todo", "tasks", "shared-todo", "待办", "清单"],
   "interface": {
     "displayName": "共享待办",
-    "shortDescription": "查询、新增、修改、完成和删除共享待办",
+    "shortDescription": "管理共享清单、邮件通知和待办",
     "longDescription": "连接已部署的 Shared Todo 远程 MCP，通过浏览器使用个人账号授权，在清单成员权限范围内管理待办，并可在网页设置中撤销客户端授权。自建地址需另行部署兼容服务。",
     "developerName": "Merrrrrvyn",
     "websiteURL": "https://todolist.yymervyn.top",
@@ -21,6 +21,7 @@
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "查看我的清单和未完成待办",
+      "新建英语启蒙清单，描述 week9，并开启邮件通知",
       "在采购清单中添加买牛奶",
       "修改待办的截止时间并标记完成"
     ]

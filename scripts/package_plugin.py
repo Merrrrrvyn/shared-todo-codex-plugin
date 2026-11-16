@@ -114,7 +114,7 @@ def validate_package(root: Path, *, allow_local_http: bool = False) -> dict:
     if set(server) != {"type", "url", "scopes"} or server["type"] != "http":
         raise ValueError("MCP 仅允许 HTTP 地址与授权范围，不允许内置凭据")
     validate_url(server["url"], allow_local_http=allow_local_http)
-    if server["scopes"] != ["todo:read", "todo:write", "todo:delete"]:
+    if server["scopes"] != ["todo:read", "todo:write", "todo:delete", "list:write"]:
         raise ValueError("MCP 授权范围不符合待办接口约定")
     return manifest
 

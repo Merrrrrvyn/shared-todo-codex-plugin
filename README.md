@@ -1,8 +1,8 @@
 # Shared Todo · Codex CLI 插件
 
-预览版 `0.1.0-alpha.2`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可通过自然语言管理 Shared Todo 账号中的待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
+预览版 `0.1.0-alpha.3`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可通过自然语言新建和修改清单、设置邮件通知并管理待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
 
-**服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 支持独立账号授权、7 个待办工具、权限隔离和授权撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
+**服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 提供 10 个清单/待办工具、独立授权、权限隔离和撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
 
 ## 安装到 Codex CLI
 
@@ -34,23 +34,42 @@ codex mcp login shared-todo
 
 其他版本可先用 `codex mcp list` 核对名称。不要额外注册一份重复服务器。
 
+### 从 alpha.2 升级
+
+新建清单和修改清单/邮件设置需要新增的 `list:write` 权限，旧令牌不会自动获得。先刷新 marketplace、重装插件并清除旧客户端登录缓存，然后重新确认授权：
+
+```bash
+codex plugin marketplace upgrade shared-todo
+codex mcp logout shared-todo
+codex plugin remove shared-todo@shared-todo
+codex plugin add shared-todo@shared-todo
+codex mcp login shared-todo --scopes todo:read,todo:write,todo:delete,list:write
+```
+
+之后开启新的 Codex 会话，重新发现 10 个工具。已在隔离配置中验证旧版三范围登录 → 退出 → 新版重新注册 → 四范围登录成功。只刷新 access token 不能扩权；旧注册元数据可能拒绝新范围，所以不要跳过退出重连。
+
 已使用 Codex CLI 0.169.0 和隔离配置分别完成本地及公网服务 DCR/OAuth 登录验证，连接状态为 OAuth。公网验收覆盖待办操作、成员权限、实时推送及授权撤销，测试账号与凭据已清理。
 
 当前配置不包含固定 `client_id`。配套服务支持公共客户端 DCR 与 S256 PKCE；Codex 可自动注册，不需要在插件中放置客户端密钥。资源发现与令牌受众需与实际 MCP URL 一致。
 
-申请范围为 `todo:read`、`todo:write`、`todo:delete`，用户可以在授权页缩小范围。用户最终权限仍受清单角色约束：viewer 只读，owner/editor 可修改，非成员不可访问。服务器每次校验权限和授权撤销状态。只有写权限、没有读权限时，写入结果仅返回对象 ID，不返回已有备注等详情。
+申请范围为 `todo:read`、`todo:write`、`todo:delete`、`list:write`，用户可以在授权页缩小范围。owner/editor 可修改待办，viewer 只读；**已有清单的名称、描述和邮件设置仅创建者可改**。非成员不可访问，服务端逐次校验。只有写权限时，写入结果仅返回 ID，不返回已有描述/备注/通知设置。
 
 ## 使用示例
 
 服务接通并授权后，可显式使用 `$shared-todo`，或在自然语言中说明要操作 Shared Todo：
 
 - 查看我的清单，以及采购清单里的未完成待办。
+- 新建一个英语启蒙的待办清单，描述 week9，打开邮件通知。
+- 查看英语启蒙清单的详情，把汇总邮件时间改为北京时间每天 08:30。
+- 关闭英语启蒙清单的邮件通知，保留现有发送时间。
 - 在采购清单添加“买牛奶”，2026 年 11 月 20 日 18:00（Asia/Shanghai）截止。
 - 把待办 42 的优先级设为紧急。
 - 将待办 42 标记完成；或将它重新打开。
 - 删除待办 42。
 
 插件会定位清单和待办 ID，处理重名与分页，只回报工具确认成功的操作。不会将待办备注中的文字当作操作指令。
+
+创建清单可在一次请求中同时保存名称、描述和邮件开关。只要求开启而未指定时间时，新清单沿用默认每天 `09:00 / UTC+8`，结果会明确回显；更新已有清单仅开关通知时保留原时间。汇总针对清单成员和未完成待办，配置保存成功不代表邮件已经发出，空清单不会发送待办汇总。
 
 ## 校验、测试与打包
 
@@ -64,7 +83,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/package_plugin.py
 ```
 
-产物为 `dist/shared-todo-codex-0.1.0-alpha.2/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
+产物为 `dist/shared-todo-codex-0.1.0-alpha.3/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
 
 更换服务地址时，仅改发布产物，不修改源码：
 
@@ -83,7 +102,7 @@ python3 scripts/package_plugin.py --mcp-url http://127.0.0.1:8000/mcp --allow-lo
 本地联调需要另行提供兼容的 MCP/OAuth 服务，本仓库不提供服务端。服务地址、受保护资源元数据和令牌受众应一致，并实现 [MCP 接口约定](plugins/shared-todo/skills/shared-todo/references/mcp-contract.md)。准备服务后再安装本机构建：
 
 ```bash
-codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.2
+codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.3
 codex plugin add shared-todo@shared-todo
 codex mcp login shared-todo
 ```

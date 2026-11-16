@@ -8,7 +8,7 @@
 
 当前 `.mcp.json` 未固定 `client_id`。服务端提供授权服务器及受保护资源发现元数据，并支持公共客户端 DCR（`token_endpoint_auth_method=none`）。MCP URL、资源发现和令牌受众必须匹配。不向桌面插件分发 confidential client secret。
 
-范围：`todo:read`（清单、待办及必要成员查询）、`todo:write`（新增、修改、完成、重开）、`todo:delete`（删除）。实际权限为授权范围与当前清单成员权限的交集，每次操作重新检查；viewer 不能写入，非成员不能访问。只有写权限时，新增和修改仅返回 `id` / `list_id`。
+范围：`todo:read`（清单、待办及必要成员查询）、`todo:write`（新增、修改、完成、重开待办）、`todo:delete`（删除待办）、`list:write`（新建清单，修改自有清单与邮件通知）。原有令牌不会自动获得新范围。实际权限为授权范围与当前清单成员权限的交集，每次操作重新检查；viewer 不能写待办，非成员不能访问，修改清单需创建者身份。只有写权限时，新增和修改仅返回 `id` / `list_id`。
 
 ## 工具与现有 API
 
@@ -17,6 +17,9 @@
 | 工具 | 核心参数 | 复用的 REST 路径（相对 `/api/v1`） | 范围 |
 | --- | --- | --- | --- |
 | `list_lists` | 无 | `GET /lists` | `todo:read` |
+| `get_list` | `list_id` | `GET /lists/{list_id}` | `todo:read` |
+| `create_list` | `payload: {name, description?, email_notify_enabled?, email_notify_time?, email_notify_tz_offset?}` | `POST /lists` | `list:write` |
+| `update_list` | `list_id`, `payload: {仅需更新的清单字段}` | `PATCH /lists/{list_id}` | `list:write` + 创建者 |
 | `list_members` | `list_id` | `GET /lists/{list_id}/members` | `todo:read` |
 | `list_todos` | `list_id`, `status`, `keyword`, `assignee_id`, `page`, `size` | `GET /lists/{list_id}/todos` | `todo:read` |
 | `get_todo` | `todo_id` | `GET /todos/{todo_id}` | `todo:read` |
@@ -27,6 +30,10 @@
 待办字段：`title`、`note`、`priority`（0 普通 / 1 重要 / 2 紧急）、`due_at`（带时区时间）、`assignee_id`、`recurrence`（daily / weekly / monthly）、`recurrence_until`。更新还支持 `status`（pending / done）。时间必须带时区；更新的 `title`、`status`、`priority` 不允许显式 null。其他字段的可空性以服务端 schema 为准。清单查询结果不包含邀请码。
 
 服务端复用已有业务处理，保留实时广播、动态记录、指派提醒与重复任务。操作身份来自已验证的 MCP 令牌，不能由客户端参数决定；MCP 令牌不作为网页 API 令牌透传。
+
+清单字段限 `name`（去除两端空格，不能为空）、`description`（可显式 null 清空）、`email_notify_enabled`、`email_notify_time`（HH:MM）、`email_notify_tz_offset`（-720..840 分钟）。新建默认关闭通知、09:00、UTC+8；更新省略字段保持原值，名称与邮件字段拒绝显式 null。当前 MCP 不接受 template/schedule/owner_id 等额外字段，也不提供删除清单工具。
+
+清单查询和有读取权限的写入响应包含邮件开关、时间、时区和最近发送时间，不包含邀请码。邮件开关设置的是清单未完成待办汇总，配置保存不等于实际投递。
 
 ## 联调验收范围
 
