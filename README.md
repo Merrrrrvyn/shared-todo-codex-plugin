@@ -1,8 +1,10 @@
 # Shared Todo · Codex CLI 插件
 
-预览版 `0.1.0-alpha.6`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可查询内置模板并一键创建含初始待办的清单，也可管理自有清单、邮件通知和待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
+预览版 `0.1.0-alpha.7`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可查询内置模板并一键创建含初始待办的清单，也可管理自有清单、邮件通知和待办处理结果。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
 
 **服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 提供 12 个清单、模板和待办工具、独立授权、权限隔离和撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
+
+**处理结果兼容性：** 公网服务已于 2026-11-17 完成 `a94cb2e80d16` 数据库迁移及 MCP 更新，alpha.7 可读写可选的待办 `result` 字段。自建服务须先应用该迁移并更新服务端，再使用此字段。备注 `note` 与处理结果 `result` 是独立字段。
 
 ## 安装到 Codex CLI
 
@@ -33,6 +35,16 @@ codex mcp login shared-todo
 ```
 
 其他版本可先用 `codex mcp list` 核对名称。不要额外注册一份重复服务器。
+
+### 从 alpha.6 升级
+
+alpha.7 增加待办处理结果 `result` 的插件指引与接口契约，不增加授权范围。公网服务已完成所需数据库迁移和 MCP 更新；自建服务须先升级。刷新 marketplace、重新安装并开启新会话：
+
+```bash
+codex plugin marketplace upgrade shared-todo
+codex plugin remove shared-todo@shared-todo
+codex plugin add shared-todo@shared-todo
+```
 
 ### 从 alpha.5 升级
 
@@ -101,6 +113,7 @@ codex --no-daemon
 - 关闭英语启蒙清单的邮件通知，保留现有发送时间。
 - 在采购清单添加“买牛奶”，2026 年 11 月 20 日 18:00（Asia/Shanghai）截止。
 - 为待办“买牛奶”添加备注“全脂，买 2 瓶；品牌不限”。
+- 将待办“买牛奶”的处理结果记录为“已购买 2 瓶全脂牛奶”。
 - 把待办 42 的优先级设为紧急。
 - 将待办 42 标记完成；或将它重新打开。
 - 删除待办 42。
@@ -124,7 +137,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/package_plugin.py
 ```
 
-产物为 `dist/shared-todo-codex-0.1.0-alpha.6/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
+产物为 `dist/shared-todo-codex-0.1.0-alpha.7/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务支持处理结果或远程 MCP/OAuth 可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
 
 更换服务地址时，仅改发布产物，不修改源码：
 
@@ -140,10 +153,10 @@ python3 scripts/package_plugin.py --mcp-url http://127.0.0.1:8000/mcp --allow-lo
 
 不要分发本地联调包。正式服务使用 HTTPS，URL 中不允许账号密码、查询参数或片段。
 
-本地联调需要另行提供兼容的 MCP/OAuth 服务，本仓库不提供服务端。服务地址、受保护资源元数据和令牌受众应一致，并实现 [MCP 接口约定](plugins/shared-todo/skills/shared-todo/references/mcp-contract.md)。准备服务后再安装本机构建：
+本地联调需要另行提供兼容的 MCP/OAuth 服务，本仓库不提供服务端。服务地址、受保护资源元数据和令牌受众应一致，并实现 [MCP 接口约定](plugins/shared-todo/skills/shared-todo/references/mcp-contract.md)。要使用 `result` 字段，服务还需完成对应数据库迁移和 MCP 更新。准备兼容服务后再安装本机构建：
 
 ```bash
-codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.6
+codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.7
 codex plugin add shared-todo@shared-todo
 codex mcp login shared-todo
 ```
@@ -182,6 +195,6 @@ codex plugin marketplace remove shared-todo
 
 ## 服务与数据
 
-插件默认连接 Shared Todo 托管服务。使用时，清单、标题、备注、截止时间等操作数据会发送到该服务；工具结果也会进入你使用的 AI 客户端上下文。托管服务按账号与清单成员权限保存和访问数据。
+插件默认连接 Shared Todo 托管服务。使用时，清单、标题、备注、处理结果、截止时间等操作数据会发送到该服务；工具结果也会进入你使用的 AI 客户端上下文。托管服务按账号与清单成员权限保存和访问数据。
 
 密码在 Shared Todo 网页输入，访问与刷新令牌由 Codex 的 OAuth 机制管理，插件不内置或收集这些凭据。可以在网页“设置 → 已授权的 AI 客户端”撤销访问。公开本插件仓库不会公开账号中的清单或待办。
