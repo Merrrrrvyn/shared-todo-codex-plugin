@@ -6,9 +6,12 @@
 
 **处理结果兼容性：** 公网服务已于 2026-11-17 完成 `a94cb2e80d16` 数据库迁移及 MCP 更新，alpha.7 可读写可选的待办 `result` 字段。自建服务须先应用该迁移并更新服务端，再使用此字段。备注 `note` 与处理结果 `result` 是独立字段。
 
+**WorkBuddy 接入：** 另提供“Shared Todo 自定义 MCP 连接器 + 共享待办技能”适配包，复用同一后端，独立版本 `1.0.0`。详见 [WorkBuddy 安装和使用说明](integrations/workbuddy/README.md)。WorkBuddy 5.9.3 已通过技能 ZIP 导入与真实只读查询验证；Codex 插件安装命令和 WorkBuddy 技能导入流程分别使用，不混用配置或登录凭据。
+
 ## 阅读导航
 
 - [第一次使用：安装、登录与验证](#安装到-codex-cli)
+- [在 WorkBuddy 中使用](integrations/workbuddy/README.md)
 - [授权范围、成员角色与版本升级](#登录与权限)
 - [可以直接复制的使用示例](#使用示例)
 - [待办字段与填写规则](#待办字段与填写规则)
