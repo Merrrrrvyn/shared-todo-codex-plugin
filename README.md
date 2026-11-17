@@ -1,6 +1,6 @@
 # Shared Todo · Codex CLI 插件
 
-预览版 `0.1.0-alpha.5`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可查询内置模板并一键创建含初始待办的清单，也可管理自有清单、邮件通知和待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
+预览版 `0.1.0-alpha.6`。插件包含共享待办 Skill 和远程 HTTP MCP 配置，可查询内置模板并一键创建含初始待办的清单，也可管理自有清单、邮件通知和待办。此仓库只分发插件与打包工具，不包含服务端或用户凭据。
 
 **服务状态：MCP/OAuth 已于 2026-11-16 部署并完成公网验收。** 默认地址 `https://api.todolist.yymervyn.top/mcp` 提供 12 个清单、模板和待办工具、独立授权、权限隔离和撤销。请先在 `https://todolist.yymervyn.top` 注册或准备现有账号。
 
@@ -33,6 +33,16 @@ codex mcp login shared-todo
 ```
 
 其他版本可先用 `codex mcp list` 核对名称。不要额外注册一份重复服务器。
+
+### 从 alpha.5 升级
+
+alpha.6 在插件指引和 MCP 接口约定中补充了待办备注操作方式，不增加授权范围。刷新 marketplace、重新安装插件并开启新会话即可：
+
+```bash
+codex plugin marketplace upgrade shared-todo
+codex plugin remove shared-todo@shared-todo
+codex plugin add shared-todo@shared-todo
+```
 
 ### 从 alpha.4 升级
 
@@ -90,6 +100,7 @@ codex --no-daemon
 - 查看英语启蒙清单的详情，把汇总邮件时间改为北京时间每天 08:30。
 - 关闭英语启蒙清单的邮件通知，保留现有发送时间。
 - 在采购清单添加“买牛奶”，2026 年 11 月 20 日 18:00（Asia/Shanghai）截止。
+- 为待办“买牛奶”添加备注“全脂，买 2 瓶；品牌不限”。
 - 把待办 42 的优先级设为紧急。
 - 将待办 42 标记完成；或将它重新打开。
 - 删除待办 42。
@@ -113,7 +124,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/package_plugin.py
 ```
 
-产物为 `dist/shared-todo-codex-0.1.0-alpha.5/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
+产物为 `dist/shared-todo-codex-0.1.0-alpha.6/` 和同名 `.tar.gz`。校验和打包成功只代表包结构有效，不证明远程服务可用。已有产物不会被覆盖，请为新构建传入不同的 `--output`。
 
 更换服务地址时，仅改发布产物，不修改源码：
 
@@ -132,7 +143,7 @@ python3 scripts/package_plugin.py --mcp-url http://127.0.0.1:8000/mcp --allow-lo
 本地联调需要另行提供兼容的 MCP/OAuth 服务，本仓库不提供服务端。服务地址、受保护资源元数据和令牌受众应一致，并实现 [MCP 接口约定](plugins/shared-todo/skills/shared-todo/references/mcp-contract.md)。准备服务后再安装本机构建：
 
 ```bash
-codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.5
+codex plugin marketplace add ./dist/local/shared-todo-codex-0.1.0-alpha.6
 codex plugin add shared-todo@shared-todo
 codex mcp login shared-todo
 ```

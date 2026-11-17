@@ -1,6 +1,6 @@
 {
   "name": "shared-todo",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6",
   "description": "通过远程 MCP 使用内置模板创建清单，管理自有清单和待办，并设置邮件通知；每位用户独立授权。",
   "author": {
     "name": "Merrrrrvyn"
